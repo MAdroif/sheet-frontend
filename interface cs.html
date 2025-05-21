@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Sheets Frontend</title>
+</head>
+<body>
+    <h1>Data Pengguna</h1>
+
+    <!-- Form untuk menambah data -->
+    <form id="addUserForm">
+        <label for="id">ID:</label>
+        <input type="text" id="id" required><br>
+        <label for="name">Nama:</label>
+        <input type="text" id="name" required><br>
+        <label for="email">Email:</label>
+        <input type="email" id="email" required><br>
+        <button type="submit">Tambah Data</button>
+    </form>
+
+    <!-- Tabel untuk menampilkan data -->
+    <h2>Data dari Spreadsheet</h2>
+    <table border="1" id="dataTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nama</th>
+                <th>Email</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+    <script>
+        const API_URL = "https://simulasi-cb631a2df2d9.herokuapp.com";
+
+        // Fungsi untuk membaca data dari server
+        async function fetchData() {
+            try {
+                const response = await fetch(`${API_URL}/read`);
+                const data = await response.json();
+                const tableBody = document.querySelector("#dataTable tbody");
+                tableBody.innerHTML = ""; // Kosongkan tabel sebelum memuat data baru
+
+                data.forEach(row => {
+                    const tr = document.createElement("tr");
+                    row.forEach(cell => {
+                        const td = document.createElement("td");
+                        td.textContent = cell;
+                        tr.appendChild(td);
+                    });
+                    tableBody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            }
+        }
+
+        // Fungsi untuk menambah data ke server
+        document.getElementById("addUserForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const id = document.getElementById("id").value;
+            const name = document.getElementById("name").value;
+            const email = document.getElementById("email").value;
+
+            try {
+                const response = await fetch(`${API_URL}/write`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify([id, name, email]),
+                });
+
+                if (response.ok) {
+                    alert("Data berhasil ditambahkan!");
+                    fetchData(); // Muat ulang data setelah menambahkan
+                } else {
+                    alert("Gagal menambahkan data.");
+                }
+            } catch (error) {
+                console.error("Error adding data:", error);
+            }
+        });
+
+        // Muat data saat halaman dimuat
+        window.onload = fetchData;
+    </script>
+</body>
+</html>
