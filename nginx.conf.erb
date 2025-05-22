@@ -1,0 +1,38 @@
+worker_processes auto;
+error_log stderr notice;
+pid /tmp/nginx.pid;
+
+events {
+  worker_connections 1024;
+}
+
+http {
+  include mime.types;
+  default_type application/octet-stream;
+  access_log /tmp/nginx_access.log;
+  sendfile on;
+  keepalive_timeout 65;
+  gzip on;
+  gzip_comp_level 5;
+  gzip_types      text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
+
+  server {
+    listen <%= ENV['PORT'] %>;
+    server_name _;
+
+    root /app/public; # Ini menunjuk ke folder 'public' tempat file HTML Anda
+
+    location / {
+      try_files $uri $uri/ /index.html =404; # Ini akan mencoba melayani file, jika tidak ada, mengembalikan index.html
+    }
+
+    error_page 404 /index.html; # Opsional: mengarahkan semua 404 ke index.html untuk aplikasi SPA
+
+    # Untuk melayani asset dengan cache yang lebih baik
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|woff|woff2|ttf|svg|eot)$ {
+        expires 30d;
+        add_header Cache-Control "public, no-transform";
+        try_files $uri $uri/ =404;
+    }
+  }
+}
